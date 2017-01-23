@@ -19,12 +19,12 @@ title Preparati n for paper
 		mov  ds, ax
 		
 		
-		mov ax, 3;
-		mov bx, ax
-		mov cl, 4
-		shl ax, cl
-		sub ax, bx
+		mov ax, 35
+		mov bl, -7
 		
+		idiv bl
+		
+		call writeint_signed
 		
 		
 		
