@@ -83,7 +83,7 @@ title assignment Q2a
 		call rename_file
 		jmp quit
 		
-		lbl_delete_file
+		lbl_delete_file:
 		call delete_file
 		jmp quit
 		
