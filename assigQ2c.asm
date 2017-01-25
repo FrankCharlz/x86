@@ -12,7 +12,10 @@ title assignment Q2a
 	message1 db 'Enter your choice: ', 0
 	message2 db 'Chosen service is NOT availabe, try again,', 13, 10, 13, 10, 0
 	
+	msg_new_file_name db 'Write new file name (should include drive letter ): ', 0
+	
 	filename db 'g:/assignq2.txt', 0 
+	filename_buffer db 93 dup (0) ; buffer for new file name
 	filehandle dw ?
 	filebuffer db 0256h dup (0) ; buffer large enough to hold contents of the file
 	
@@ -76,8 +79,6 @@ title assignment Q2a
 		
 		open_error:
 		call dos_error
-		jmp quit
-	
 		
 		quit:
 		mov  ax, 4c00h
@@ -92,6 +93,17 @@ title assignment Q2a
 		
 		mov ah, 3fh
 		int 21h ; read contents to buffer
+		jnc read_success
+		call dos_error ; show error reading
+		
+		read_success:
+		
+		mov ah, 3eh
+		int 21h ; close file
+		jnc close_success
+		call dos_error ; show error closing
+		
+		close_success:
 		
 		jnc disp_cont_loop
 		call dos_error
@@ -113,7 +125,25 @@ title assignment Q2a
 	
 	
 	rename_file proc
-		nop
+		
+		lea dx, msg_new_file_name
+		call writestring
+		
+		mov dx, offset filename_buffer ; buffer ot hold read string
+		mov cx, 93 ; maximum chars to read
+		call readstring
+		
+		mov dx, offset filename
+		mov di, offset filename_buffer
+		
+		mov ah, 56h
+		int 21h ; rename file
+		
+		jnc rename_success
+		call dos_error
+		
+		rename_sucess:
+		
 		ret
 	rename_file endp
 	

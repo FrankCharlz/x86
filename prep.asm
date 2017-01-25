@@ -1,42 +1,128 @@
-title Preparati n for paper
+title assignment Q2a
 
 .model small
-.stack 100h ; 10 bytes --> 5 words
+.stack 100h 
  
 .data
-	num1 dw 100h
-	num2 dw 102h
+	menu0 db 'Please select a service to perform: ',  13, 10, 0
+	menu1 db 9, '1. Display contents of a file',  13, 10, 0
+	menu2 db 9, '2. Rename file', 13, 10, 0
+	menu3 db 9, '3. Terminate the program', 13, 10, 0
 	
+	message1 db 'Enter your choice: ', 0
+	message2 db 'Chosen service is NOT availabe, try again,', 13, 10, 13, 10, 0
 	
-  
+	filename db 'g:/assignq2.txt', 0 
+	filename_buffer db 93 dup (0) ; buffer for new file name
+	filehandle dw ?
+	filebuffer db 0256h dup (0) ; buffer large enough to hold contents of the file
+	
 .code
-    ; extrn clrscr:proc, crlf:proc, str_ucase:proc
+    extrn clrscr:proc, crlf:proc, dos_error:proc
     extrn writeint:proc, writestring:proc, writeint_signed:proc
     extrn readint:proc, readstring:proc, readchar:proc
 	
 	main proc
 		mov  ax, @data
 		mov  ds, ax
+		call clrscr
 		
+		; prepare a file for reading
+		mov dx, offset filename
+		mov ah, 3dh          ; function for opening a file
+		mov al, 0            ; input mode is for input only    
+		int 21h
+		jc open_error       ; Error occured in opening a file
+		mov filehandle, ax   ; File opened successfully
+			
+		show_menu:  ; show the menu
+		lea dx, menu0
+		call writestring
 		
-		mov ax, 35
-		mov bl, -7
+		lea dx, menu1
+		call writestring
 		
-		idiv bl
+		lea dx, menu2
+		call writestring
 		
-		call writeint_signed
+		lea dx, menu3
+		call writestring
 		
+		call crlf
+		lea dx, message1
+		call writestring
 		
+		call readint ; read choice to ax
+		
+		cmp ax, 1
+		je lbl_disp_contents
+		cmp ax, 2
+		je lbl_rename_file
+		cmp ax, 3
+		je quit
+		
+		; entered wrong choice
+		lea dx, message2 ; wrong choice prompt
+		call writestring
+		call crlf
+		jmp show_menu
+		
+		lbl_disp_contents:
+		call display_contents
+		jmp quit
+		
+		lbl_rename_file:
+		call rename_file
+		jmp quit
+		
+		open_error:
+		call dos_error
+		jmp quit
+	
 		
 		quit:
 		mov  ax, 4c00h
 		int  21h
 	main endp
 	
-	sum proc
+	display_contents proc
 	
+		mov bx, filehandle
+		mov cx, lengthof filebuffer
+		mov dx, offset filebuffer
+		
+		mov ah, 3fh
+		int 21h ; read contents to buffer
+		
+		jnc disp_cont_loop
+		call dos_error
 		ret
-	sum endp
+		
+
+		disp_cont_loop:
+			mov ah, 02h
+			mov dl, [si]
+			int 21h
+			inc si
+		LOOP disp_cont_loop
+		
+		ret
+		
+	
+	display_contents endp
+	
+	
+	
+	rename_file proc
+	
+		mov dx, offset filename_buffer ; buffer ot hold read string
+		mov cx, 93 ; maximum chars to read
+		call readstring
+		
+		call writestring
+		
+		ret
+	rename_file endp
 	
 	
 	

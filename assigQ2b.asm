@@ -7,7 +7,8 @@ title assignment Q2a
 	menu0 db 'Please select a service to perform: ',  13, 10, 0
 	menu1 db 9, '1. Display contents of a file',  13, 10, 0
 	menu2 db 9, '2. Rename file', 13, 10, 0
-	menu3 db 9, '3. Terminate the program', 13, 10, 0
+	menu3 db 9, '3. Delete file', 13, 10, 0
+	menu4 db 9, '4. Terminate the program', 13, 10, 0
 	
 	message1 db 'Enter your choice: ', 0
 	message2 db 'Chosen service is NOT availabe, try again,', 13, 10, 13, 10, 0
@@ -50,6 +51,9 @@ title assignment Q2a
 		lea dx, menu3
 		call writestring
 		
+		lea dx, menu4
+		call writestring
+		
 		call crlf
 		lea dx, message1
 		call writestring
@@ -61,6 +65,8 @@ title assignment Q2a
 		cmp ax, 2
 		je lbl_rename_file
 		cmp ax, 3
+		je lbl_delete_file
+		cmp ax, 4
 		je quit
 		
 		; entered wrong choice
@@ -75,6 +81,10 @@ title assignment Q2a
 		
 		lbl_rename_file:
 		call rename_file
+		jmp quit
+		
+		lbl_delete_file
+		call delete_file
 		jmp quit
 		
 		open_error:
@@ -146,6 +156,21 @@ title assignment Q2a
 		
 		ret
 	rename_file endp
+	
+	delete_file proc
+		
+		mov dx, offset filename
+		mov ah, 41h
+		int 21h ; delete file
+		
+		jnc delete_success
+		call dos_error
+		
+		delete_success:
+		
+		ret
+	delete_file endp
+	
 	
 	
 	
